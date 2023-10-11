@@ -10,10 +10,10 @@
 #define panic() do { fprintf(stderr, "%s:%d in %s: %s\n", __FILE__, __LINE__, __FUNCTION__, strerror(errno)); exit(1); } while (0)
 #define panic_if(cond) do { if (cond) panic(); } while (0)
 
-#define LSH_RL_BUFSIZE 1024
-char *lsh_read_line(void)
+#define BULLSH_RL_BUFSIZE 1024
+char *bullsh_read_line(void)
 {
-    int bufsize = LSH_RL_BUFSIZE;
+    int bufsize = BULLSH_RL_BUFSIZE;
     int position = 0;
     char *buffer = malloc(bufsize);
     int c;
@@ -34,7 +34,7 @@ char *lsh_read_line(void)
         position++;
 
         if (position >= bufsize) {
-            bufsize += LSH_RL_BUFSIZE;
+            bufsize += BULLSH_RL_BUFSIZE;
             buffer = realloc(buffer, bufsize);
             if (buffer == NULL) {
                 panic();
@@ -43,11 +43,11 @@ char *lsh_read_line(void)
     }
 }
 
-#define LSH_TOK_BUFSIZE 64
-#define LSH_TOK_DELIM " \t\r\b\a"
-char **lsh_split_line(char *line)
+#define BULLSH_TOK_BUFSIZE 64
+#define BULLSH_TOK_DELIM " \t\r\b\a"
+char **bullsh_split_line(char *line)
 {
-    int bufsize = LSH_TOK_BUFSIZE;
+    int bufsize = BULLSH_TOK_BUFSIZE;
     int position = 0;
     char **tokens = malloc(bufsize * sizeof(char *));
     char *token;
@@ -55,23 +55,23 @@ char **lsh_split_line(char *line)
     panic_if(tokens == NULL);
 
     char *save_ptr = NULL;
-    token = strtok_r(line, LSH_TOK_DELIM, &save_ptr);
+    token = strtok_r(line, BULLSH_TOK_DELIM, &save_ptr);
     while (token != NULL) {
         tokens[position++] = token;
 
         if (position >= bufsize) {
-            bufsize += LSH_TOK_BUFSIZE;
+            bufsize += BULLSH_TOK_BUFSIZE;
             tokens = realloc(tokens, bufsize * sizeof(char *));
             panic_if(tokens == NULL);
         }
 
-        token = strtok_r(save_ptr, LSH_TOK_DELIM, &save_ptr);
+        token = strtok_r(save_ptr, BULLSH_TOK_DELIM, &save_ptr);
     }
     tokens[position] = NULL;
     return tokens;
 }
 
-int lsh_launch(char **args)
+int bullsh_launch(char **args)
 {
     pid_t pid, wpid;
     int status;
@@ -92,9 +92,9 @@ int lsh_launch(char **args)
 /*
  * Function Declarations for builtin shell commands:
  */
-int lsh_cd(char **args);
-int lsh_help(char **args);
-int lsh_exit(char **args);
+int bullsh_cd(char **args);
+int bullsh_help(char **args);
+int bullsh_exit(char **args);
 
 /*
  * List of builtin commands, followed by their corresponding functions.
@@ -106,37 +106,37 @@ char *builtin_str[] = {
 };
 
 int (*builtin_func[]) (char **) = {
-    &lsh_cd,
-    &lsh_help,
-    &lsh_exit
+    &bullsh_cd,
+    &bullsh_help,
+    &bullsh_exit
 };
 
-#define LSH_NUM_BUILTINS sizeof(builtin_str) / sizeof(char *)
+#define BULLSH_NUM_BUILTINS sizeof(builtin_str) / sizeof(char *)
 
 /*
  * Builtin function implementations
  */
 
-int lsh_cd(char **args)
+int bullsh_cd(char **args)
 {
     if (args[1] == NULL) {
-        fprintf(stderr, "lsh: expected argument to \"cd\"\n");
+        fprintf(stderr, "bullsh: expected argument to \"cd\"\n");
     } else {
         if (chdir(args[1]) != 0) {
-            fprintf(stderr, "lsh_cd %s\n", strerror(errno));
+            fprintf(stderr, "bullsh_cd %s\n", strerror(errno));
         }
     }
     return 1;
 }
 
-int lsh_help(char **args)
+int bullsh_help(char **args)
 {
     (void) args;
 
     printf("Type program names and arguments, and hit enter.\n");
     printf("The following are built in:\n");
 
-    for (int i = 0; i < LSH_NUM_BUILTINS; i++) {
+    for (int i = 0; i < BULLSH_NUM_BUILTINS; i++) {
         printf("    %s\n", builtin_str[i]);
     }
 
@@ -144,29 +144,29 @@ int lsh_help(char **args)
     return 1;
 }
 
-int lsh_exit(char **args)
+int bullsh_exit(char **args)
 {
     (void) args;
     return 0;
 }
 
-int lsh_execute(char **args)
+int bullsh_execute(char **args)
 {
     if (args[0] == NULL) {
         // Empty command
         return 1;
     }
 
-    for (int i = 0; i < LSH_NUM_BUILTINS; i++) {
+    for (int i = 0; i < BULLSH_NUM_BUILTINS; i++) {
         if (strcmp(args[0], builtin_str[i]) == 0) {
             return (*builtin_func[i])(args);
         }
     }
 
-    return lsh_launch(args);
+    return bullsh_launch(args);
 }
 
-void lsh_loop(void)
+void bullsh_loop(void)
 {
     char *line;
     char **args;
@@ -174,9 +174,9 @@ void lsh_loop(void)
 
     do {
         printf("> ");
-        line = lsh_read_line();
-        args = lsh_split_line(line);
-        status = lsh_execute(args);
+        line = bullsh_read_line();
+        args = bullsh_split_line(line);
+        status = bullsh_execute(args);
 
         free(line);
         free(args);
@@ -185,7 +185,7 @@ void lsh_loop(void)
 
 int main(void)
 {
-    lsh_loop();
+    bullsh_loop();
 
     return 0;
 }
